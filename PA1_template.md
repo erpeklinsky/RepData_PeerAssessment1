@@ -8,10 +8,18 @@ An activity monitoring device collects data from an anonymous individual at 5 mi
 First, the data must be loaded into R and analyzed to determine how many observations 
 and variables are in the data set.
 
-```{r, echo = TRUE}
+
+```r
 unzip(zipfile = "activity.zip")
 data <- read.csv("activity.csv")
 str(data)
+```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : chr  "2012-10-01" "2012-10-01" "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ```
 
 There are a total of 17,568 observations in this dataset.  
@@ -27,18 +35,33 @@ The variables included in this dataset are:
 1. Determine the total number of steps taken each day.
 2. Create a histogram to visualize the data.
 
-```{r, echo = TRUE}
+
+```r
 sum_eachday <- tapply(data$steps, data$date, sum, na.rm = T)
 hist(sum_eachday, xlab = "Total Steps per Day", main = "Histogram of Total Steps per Day", breaks = 25, col = "orange")
 ```
 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png)
+
 3. Calculate the mean and median of the total number of steps taken per day.
 
-```{r}
+
+```r
 mean_perday <- round(mean(sum_eachday))
 print(mean_perday)
+```
+
+```
+## [1] 9354
+```
+
+```r
 median_perday <-round(median(sum_eachday))  
 print(median_perday)
+```
+
+```
+## [1] 10395
 ```
 
 ### What is the average daily activity pattern?  
@@ -46,30 +69,56 @@ print(median_perday)
 1. Determine the average number of steps (across all days) taken for each 5 minute interval. Create a time series plot of the 5-minute interval and average number of 
 steps taken (across all days).
 
-```{r}
+
+```r
 average_perinterval <- tapply(data$steps, data$interval, mean, na.rm = T)
 plot(average_perinterval ~ unique(data$interval), xlab = "5-minute Intervals", ylab = "Average Number of Steps", main = "Average Daily Activity Pattern", type = "l")
 ```
 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png)
+
 2. Identify the 5-minute interval that, on average of all days in the dataset, has the maximum number of steps.
 
-```{r}
+
+```r
 average_perinterval[which.max(average_perinterval)]
+```
+
+```
+##      835 
+## 206.1698
 ```
 
 ### Inputting Missing Values  
 
 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs). First determine which variables contain "NA"
 
-```{r}
+
+```r
 totalnasteps <- is.na(data$steps)
 sum(totalnasteps)
+```
 
+```
+## [1] 2304
+```
+
+```r
 totalnadate <- is.na(data$date)
 sum(totalnadate)
+```
 
+```
+## [1] 0
+```
+
+```r
 totalnainterval <- is.na(data$interval)
 sum(totalnainterval)
+```
+
+```
+## [1] 0
 ```
 
 Only the steps variable contains NA and there are 2,304.
@@ -78,7 +127,8 @@ Only the steps variable contains NA and there are 2,304.
 
 3. A new data set will be created to fill in the missing ("NA") values.
 
-```{r}
+
+```r
 data2 <- data
 for(i in 1:nrow(data)){
   if(is.na(data$steps[i])){
@@ -89,28 +139,50 @@ for(i in 1:nrow(data)){
 
 4. Create a histogram of total number of steps taken each day by first determining how many steps were taken each day with the new data set.Graph both the data sets side by side to get a better comparison.
 
-```{r}
+
+```r
 sum_eachday2 <- tapply(data2$steps, data2$date, sum, na.rm = T)
 par(mfrow = c(1,2))
 hist(sum_eachday, xlab = "Total Steps per Day", main = "With NAs", breaks = 25, col = "orange", ylim = c(0,15))
 hist(sum_eachday2, xlab = "Total Steps per Day", main = "Without NAs", breaks = 25, col = "blue", ylim = c(0,15))
 ```
 
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png)
+
 Calculate the mean and median of the total number of steps taken per day for the new data set.
 
-```{r}
+
+```r
 mean_perday2 <- round(mean(sum_eachday2))
 print(mean_perday2)
+```
+
+```
+## [1] 10766
+```
+
+```r
 median_perday2 <-round(median(sum_eachday2))  
 print(median_perday2)
 ```
 
+```
+## [1] 10766
+```
+
 Comparing the mean and median of the data before removing the NAs
 
-```{r}
+
+```r
 compare <- data.frame(mean = c(mean_perday, mean_perday2), median = c(median_perday, median_perday2))
 rownames(compare) <- c("With NAs", "Without NAs")
 print(compare)
+```
+
+```
+##              mean median
+## With NAs     9354  10395
+## Without NAs 10766  10766
 ```
 
 The new data set has a mean and median that are higher than the original data set. By inputting estimated data into the "NAs" the data is scewed higher than what it might be.
@@ -119,17 +191,19 @@ The new data set has a mean and median that are higher than the original data se
 
 1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
-```{r}
+
+```r
 weekdays <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
 data2$DOW = as.factor(ifelse(is.element(weekdays(as.Date(data2$date)), weekdays), "Weekday", "Weekend"))
 data3 <- aggregate(steps ~ interval + DOW, data2, mean)
-
 ```
 
 2. Make a panel plot containing a time series plot of the 5-minute interval and the average number of steps taken, averaged across all weekday days or weekend days. 
 
-```{r}
+
+```r
 library(lattice)
 xyplot(data3$steps ~ data3$interval|data3$DOW, main = "Average Number of Steps by Interval", xlab = "Invertval", ylab = "Number of Steps", layout = c(1,2), type = "l")
-
 ```
+
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png)
